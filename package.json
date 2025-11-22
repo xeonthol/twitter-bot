@@ -1,0 +1,32 @@
+{
+  "name": "twitter-automation-bot",
+  "version": "1.0.0",
+  "description": "Twitter automation bot for like, retweet, comment, and follow",
+  "main": "run.js",
+  "type": "module",
+  "scripts": {
+    "start": "node run.js",
+    "dev": "nodemon run.js",
+    "test": "node run.js --test"
+  },
+  "keywords": [
+    "twitter",
+    "automation",
+    "bot",
+    "puppeteer"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "node-cron": "^3.0.3",
+    "puppeteer": "^23.11.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

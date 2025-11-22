@@ -1,0 +1,19 @@
+# Secrets
+.env
+cookies.json
+
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Debug
+debug-*.png
+test-*.js
+quick-test.js
+
+# OS
+.DS_Store
+Thumbs.db

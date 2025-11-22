@@ -1,0 +1,397 @@
+// src/auth.js - FINAL FIXED VERSION
+import { config } from '../config/config.js';
+import { log } from '../utils/logger.js';
+import { sleep, randomDelay, parseCookies } from '../utils/helpers.js';
+
+/**
+ * Authentication handler for Twitter
+ */
+export class TwitterAuth {
+  constructor(page) {
+    this.page = page;
+  }
+
+  /**
+   * Login to Twitter
+   */
+  async login() {
+    if (config.useCookies) {
+      return await this.loginWithCookies();
+    } else {
+      return await this.loginWithCredentials();
+    }
+  }
+
+  /**
+   * Login using cookies (RECOMMENDED)
+   */
+  async loginWithCookies() {
+    try {
+      log.info('Logging in with cookies...');
+      
+      // Parse and set cookies
+      const cookies = parseCookies(config.cookies);
+      await this.page.setCookie(...cookies);
+      
+      // Navigate to Twitter home
+      await this.page.goto('https://twitter.com/home', {
+        waitUntil: 'networkidle2',
+        timeout: 30000,
+      });
+      
+      // Verify login by checking for profile button
+      const isLoggedIn = await this.verifyLogin();
+      
+      if (!isLoggedIn) {
+        throw new Error('Cookie login verification failed. Cookies may be expired.');
+      }
+      
+      log.success('Successfully logged in with cookies');
+      return true;
+      
+    } catch (error) {
+      log.error('Cookie login failed:', error.message);
+      throw new Error('Cookie authentication failed. Please update your cookies.');
+    }
+  }
+
+  /**
+   * Login using username and password
+   */
+  async loginWithCredentials() {
+    try {
+      log.info('Logging in with credentials...');
+      
+      // Navigate to login page (use x.com)
+      await this.page.goto('https://x.com/i/flow/login', {
+        waitUntil: 'networkidle2',
+        timeout: 30000,
+      });
+      
+      log.info('Login page loaded');
+      await sleep(randomDelay(2000, 3000));
+      
+      // Take screenshot for debugging
+      await this.page.screenshot({ path: 'logs/step1-login-page.png' });
+      log.info('Screenshot saved: logs/step1-login-page.png');
+      
+      // === STEP 1: Enter Username ===
+      log.info('Entering username...');
+      const usernameSelector = 'input[autocomplete="username"]';
+      
+      try {
+        await this.page.waitForSelector(usernameSelector, { timeout: 10000 });
+        await sleep(randomDelay(500, 1000));
+        
+        // Clear and type
+        await this.page.click(usernameSelector, { clickCount: 3 });
+        await this.page.keyboard.press('Backspace');
+        await sleep(randomDelay(300, 500));
+        
+        await this.page.type(usernameSelector, config.username, { 
+          delay: randomDelay(80, 150) 
+        });
+        
+        log.info('✓ Username entered');
+        await sleep(randomDelay(1000, 2000));
+        
+        // Screenshot after username
+        await this.page.screenshot({ path: 'logs/step2-username-entered.png' });
+        
+      } catch (error) {
+        log.error('Failed to enter username:', error.message);
+        await this.page.screenshot({ path: 'logs/error-username.png' });
+        throw error;
+      }
+      
+      // === STEP 2: Click Next Button ===
+      log.info('Looking for Next button...');
+      
+      try {
+        await sleep(randomDelay(1000, 2000));
+        
+        // Method 1: Try specific "Next" button selector
+        let nextClicked = false;
+        
+        // Get all buttons
+        const buttons = await this.page.$$('[role="button"]');
+        log.info(`Found ${buttons.length} buttons on page`);
+        
+        // Try to find and click Next
+        for (let i = 0; i < buttons.length; i++) {
+          try {
+            const button = buttons[i];
+            const text = await this.page.evaluate(el => {
+              return el.textContent || el.innerText || '';
+            }, button);
+            
+            log.info(`Button ${i}: "${text.trim()}"`);
+            
+            // Check if this is the Next button
+            if (text && (text.includes('Next') || text.includes('Berikutnya') || text.includes('next'))) {
+              log.info(`Clicking button ${i}: "${text}"`);
+              await button.click();
+              nextClicked = true;
+              log.success('✓ Next button clicked successfully');
+              break;
+            }
+          } catch (e) {
+            log.debug(`Error checking button ${i}: ${e.message}`);
+            continue;
+          }
+        }
+        
+        if (!nextClicked) {
+          // Method 2: Try keyboard Enter
+          log.warn('Next button not found by text, trying Enter key...');
+          await this.page.keyboard.press('Enter');
+          nextClicked = true;
+          log.info('✓ Pressed Enter key');
+        }
+        
+        await sleep(randomDelay(3000, 5000));
+        
+        // Screenshot after Next
+        await this.page.screenshot({ path: 'logs/step3-after-next.png' });
+        
+      } catch (error) {
+        log.error('Failed to click Next:', error.message);
+        await this.page.screenshot({ path: 'logs/error-next-button.png' });
+        throw error;
+      }
+      
+      // === STEP 3: Check for Email/Phone Verification ===
+      log.info('Checking for verification challenges...');
+      await sleep(randomDelay(2000, 3000));
+      
+      const emailVerificationInput = await this.page.$('input[data-testid="ocfEnterTextTextInput"]');
+      
+      if (emailVerificationInput) {
+        log.info('⚠️  Email/phone verification detected!');
+        
+        if (config.email) {
+          log.info('Entering email for verification...');
+          
+          await this.page.type('input[data-testid="ocfEnterTextTextInput"]', config.email, { 
+            delay: randomDelay(80, 150) 
+          });
+          
+          await sleep(randomDelay(1000, 2000));
+          
+          // Screenshot
+          await this.page.screenshot({ path: 'logs/step4-email-verification.png' });
+          
+          // Click Next again
+          const buttons2 = await this.page.$$('[role="button"]');
+          let nextClicked2 = false;
+          
+          for (const button of buttons2) {
+            try {
+              const text = await this.page.evaluate(el => el.textContent, button);
+              if (text && (text.includes('Next') || text.includes('Berikutnya'))) {
+                await button.click();
+                nextClicked2 = true;
+                log.success('✓ Verification Next clicked');
+                break;
+              }
+            } catch (e) {
+              continue;
+            }
+          }
+          
+          if (!nextClicked2) {
+            await this.page.keyboard.press('Enter');
+            log.info('✓ Pressed Enter for verification');
+          }
+          
+          await sleep(randomDelay(3000, 5000));
+          
+        } else {
+          log.error('Email verification required but TWITTER_EMAIL not set!');
+          await this.page.screenshot({ path: 'logs/error-email-required.png' });
+          throw new Error('TWITTER_EMAIL is required. Add it to .env file.');
+        }
+      } else {
+        log.info('✓ No additional verification required');
+      }
+      
+      // === STEP 4: Enter Password ===
+      log.info('Entering password...');
+      
+      try {
+        const passwordSelector = 'input[name="password"]';
+        await this.page.waitForSelector(passwordSelector, { timeout: 10000 });
+        await sleep(randomDelay(1000, 2000));
+        
+        await this.page.type(passwordSelector, config.password, { 
+          delay: randomDelay(80, 150) 
+        });
+        
+        log.success('✓ Password entered');
+        await sleep(randomDelay(1000, 2000));
+        
+        // Screenshot
+        await this.page.screenshot({ path: 'logs/step5-password-entered.png' });
+        
+      } catch (error) {
+        log.error('Failed to enter password:', error.message);
+        await this.page.screenshot({ path: 'logs/error-password.png' });
+        throw error;
+      }
+      
+      // === STEP 5: Click Log in ===
+      log.info('Clicking Log in button...');
+      
+      try {
+        const loginButton = await this.page.$('[data-testid="LoginForm_Login_Button"]');
+        
+        if (loginButton) {
+          await loginButton.click();
+          log.success('✓ Log in button clicked');
+        } else {
+          // Try keyboard Enter
+          log.warn('Log in button not found, trying Enter...');
+          await this.page.keyboard.press('Enter');
+        }
+        
+        // Wait for navigation
+        log.info('Waiting for login to complete...');
+        await Promise.race([
+          this.page.waitForNavigation({ 
+            waitUntil: 'networkidle2',
+            timeout: 30000 
+          }),
+          sleep(10000) // Fallback: wait 10 seconds
+        ]);
+        
+        await sleep(randomDelay(3000, 5000));
+        
+        // Screenshot final
+        await this.page.screenshot({ path: 'logs/step6-after-login.png' });
+        
+      } catch (error) {
+        log.warn('Navigation timeout (this might be OK):', error.message);
+        // Continue anyway - might be already logged in
+      }
+      
+      // === STEP 6: Verify Login ===
+      log.info('Verifying login...');
+      const isLoggedIn = await this.verifyLogin();
+      
+      if (!isLoggedIn) {
+        const currentUrl = this.page.url();
+        log.error(`Login failed. Current URL: ${currentUrl}`);
+        await this.page.screenshot({ path: 'logs/error-login-failed.png' });
+        throw new Error('Login verification failed. Check screenshots in logs/ folder.');
+      }
+      
+      log.success('✅ Successfully logged in!');
+      return true;
+      
+    } catch (error) {
+      log.error('Credential login failed:', error.message);
+      
+      try {
+        const currentUrl = this.page.url();
+        log.error(`Current URL: ${currentUrl}`);
+        await this.page.screenshot({ path: 'logs/error-final.png' });
+      } catch {}
+      
+      throw new Error('Login failed: ' + error.message);
+    }
+  }
+
+  /**
+   * Verify if login was successful
+   */
+  async verifyLogin() {
+    try {
+      log.info('Checking login status...');
+      
+      // Wait a bit for page to settle
+      await sleep(2000);
+      
+      // Method 1: Check URL
+      const currentUrl = this.page.url();
+      log.info(`Current URL: ${currentUrl}`);
+      
+      if (currentUrl.includes('/home') || currentUrl.includes('/explore')) {
+        log.success('✓ Verified via URL (on home page)');
+        return true;
+      }
+      
+      // Method 2: Check for account button
+      try {
+        await this.page.waitForSelector('[data-testid="SideNav_AccountSwitcher_Button"]', { 
+          timeout: 5000 
+        });
+        log.success('✓ Verified via account button');
+        return true;
+      } catch {
+        log.debug('Account button not found');
+      }
+      
+      // Method 3: Check for compose button
+      try {
+        await this.page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { 
+          timeout: 5000 
+        });
+        log.success('✓ Verified via compose button');
+        return true;
+      } catch {
+        log.debug('Compose button not found');
+      }
+      
+      // Method 4: Check for timeline
+      try {
+        await this.page.waitForSelector('[data-testid="primaryColumn"]', { 
+          timeout: 5000 
+        });
+        log.success('✓ Verified via timeline');
+        return true;
+      } catch {
+        log.debug('Timeline not found');
+      }
+      
+      log.warn('Could not verify login');
+      return false;
+      
+    } catch (error) {
+      log.error('Login verification error:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Get current user info
+   */
+  async getCurrentUser() {
+    try {
+      await this.page.click('[data-testid="SideNav_AccountSwitcher_Button"]');
+      await sleep(1000);
+      
+      const usernameElement = await this.page.$('[data-testid="UserName"]');
+      if (usernameElement) {
+        const username = await this.page.evaluate(el => el.textContent, usernameElement);
+        return username;
+      }
+      
+      return 'Unknown';
+    } catch (error) {
+      log.debug('Could not get current user:', error.message);
+      return 'Unknown';
+    }
+  }
+
+  /**
+   * Check if still logged in
+   */
+  async isLoggedIn() {
+    try {
+      const accountButton = await this.page.$('[data-testid="SideNav_AccountSwitcher_Button"]');
+      return !!accountButton;
+    } catch {
+      return false;
+    }
+  }
+}
