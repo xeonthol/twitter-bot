@@ -1,0 +1,67 @@
+{
+  "accounts": [
+    {
+      "name": "Account 1 - Personal",
+      "enabled": true,
+      "cookies": "auth_token=YOUR_VALUE; ct0=YOUR_VALUE; kdt=YOUR_VALUE; twid=YOUR_VALUE",
+      "config": {
+        "headless": true,
+        "autoLike": true,
+        "autoRetweet": true,
+        "autoComment": true,
+        "autoFollow": true,
+        "targetUsers": ["exqu_isit3"],
+        "targetTweets": ["Your_Link_Target"],
+        "comments": ["Great post!"],
+        "maxLikesPerRun": 1,
+        "maxRetweetsPerRun": 1,
+        "maxCommentsPerRun": 1,
+        "maxFollowsPerRun": 1,
+        "delayMin": 5000,
+        "delayMax": 12000
+      }
+    },
+    {
+      "name": "Account 2 - Business",
+      "enabled": true,
+      "cookies": "auth_token=YOUR_VALUE; ct0=YOUR_VALUE; kdt=YOUR_VALUE; twid=YOUR_VALUE",
+      "config": {
+        "headless": true,
+        "autoLike": true,
+        "autoRetweet": true,
+        "autoComment": true,
+        "autoFollow": true,
+        "targetUsers": ["exqu_isit3"],
+        "targetTweets": ["Your_Link_Target"],
+        "comments": ["Excellent insights!"],
+        "maxLikesPerRun": 1,
+        "maxRetweetsPerRun": 1,
+        "maxCommentsPerRun": 1,
+        "maxFollowsPerRun": 1,
+        "delayMin": 4000,
+        "delayMax": 10000
+      }
+    },
+    {
+      "name": "Account 3 - Tech News",
+      "enabled": true,
+      "cookies": "auth_token=YOUR_VALUE; ct0=YOUR_VALUE; kdt=YOUR_VALUE; twid=YOUR_VALUE",
+      "config": {
+        "headless": true,
+        "autoLike": true,
+        "autoRetweet": true,
+        "autoComment": true,
+        "autoFollow": true,
+        "targetUsers": ["exqu_isit3"],
+        "targetTweets": ["Your_Link_Target"],
+        "comments": ["Interesting read!"],
+        "maxLikesPerRun": 1,
+        "maxRetweetsPerRun": 1,
+        "maxCommentsPerRun": 1,
+        "maxFollowsPerRun": 1,
+        "delayMin": 3000,
+        "delayMax": 8000
+      }
+    }
+  ]
+}

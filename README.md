@@ -1,6 +1,6 @@
 # 🤖 Twitter Automation Bot
 
-A powerful and flexible Twitter automation bot built with Node.js and Puppeteer. Automate likes, retweets, comments, and follows with human-like behavior patterns using **cookie-based authentication**.
+A powerful and flexible Twitter automation bot built with Node.js and Puppeteer. Automate likes, retweets, comments, and follows with human-like behavior patterns using cookie-based authentication. **Supports both single and multi-account management!**
 
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -14,6 +14,12 @@ A powerful and flexible Twitter automation bot built with Node.js and Puppeteer.
   - Automatic cookie persistence
   - One-time manual login setup
   
+- 👥 **Multi-Account Support**
+  - Manage unlimited accounts
+  - Sequential or parallel execution
+  - Per-account configuration
+  - Enable/disable accounts easily
+  
 - 🎯 **Automated Actions**
   - ❤️ Like tweets automatically
   - 🔄 Retweet posts
@@ -21,7 +27,7 @@ A powerful and flexible Twitter automation bot built with Node.js and Puppeteer.
   - 👥 Follow users
   
 - 🛡️ **Safety Features**
-  - Configurable action limits
+  - Configurable action limits per account
   - Random delays between actions (3-15 seconds)
   - Human-like behavior simulation
   - Rate limiting protection
@@ -34,13 +40,14 @@ A powerful and flexible Twitter automation bot built with Node.js and Puppeteer.
 - 📊 **Logging & Monitoring**
   - Detailed activity logs
   - File-based logging
-  - Action tracking
+  - Per-account action tracking
+  - Execution summary reports
 
 ## 📋 Prerequisites
 
 - **Node.js** v18.0.0 or higher - [Download](https://nodejs.org/)
 - **npm** package manager (comes with Node.js)
-- A **Twitter/X account**
+- A **Twitter/X account** (or multiple accounts)
 - **Chrome/Edge browser** (for getting cookies)
 
 ## 🚀 Quick Start Guide
@@ -58,7 +65,7 @@ npm install
 
 ### Step 2: Get Your Twitter Cookies
 
-**This is a ONE-TIME setup!**
+**This is a ONE-TIME setup per account!**
 
 1. **Login to Twitter** in Chrome/Edge browser
 2. Open **DevTools** (Press `F12`)
@@ -69,7 +76,7 @@ npm install
 | Cookie Name | Description | Example |
 |-------------|-------------|---------|
 | `auth_token` | Authentication token (long string) | `abc123def456...` |
-| `ct0` | CSRF token (long string) | `xyz789uvw012...` |
+| `ct0` | CSRF token (very long string) | `xyz789uvw012...` |
 | `kdt` | Session token (medium string) | `ghi345rst678...` |
 | `twid` | Twitter ID | `u%3D1234567890` |
 
@@ -78,213 +85,233 @@ npm install
 auth_token=YOUR_VALUE; ct0=YOUR_VALUE; kdt=YOUR_VALUE; twid=YOUR_VALUE
 ```
 
-**⚠️ Common Mistakes:**
+⚠️ **Common Mistakes:**
 - ❌ `auth_token=your auth_token` (placeholder text)
 - ❌ `auth_token= abc123` (space after `=`)
 - ❌ `auth_token=abc123 ; ct0=def456` (space before `;`)
-- ✅ `auth_token=abc123; ct0=def456; kdt=ghi789; twid=u%3D123` ✅ CORRECT!
+- ✅ `auth_token=abc123; ct0=def456; kdt=ghi789; twid=u%3D123` ✅ **CORRECT!**
 
-### Step 3: Configure Bot
+### Step 3: Choose Setup Mode
 
-Copy example configuration:
+#### **Option A: Single Account (Simple)**
+
+For testing or managing just one account:
+
 ```bash
+# Copy example config
 cp .env.example .env
+
+# Edit with your cookies
+nano .env
 ```
 
-Edit `.env` and paste your cookies:
-
+Fill in:
 ```env
-# ============ LOGIN (REQUIRED) ============
 USE_COOKIES=true
-TWITTER_COOKIES=auth_token=YOUR_VALUE; ct0=YOUR_VALUE; kdt=YOUR_VALUE; twid=YOUR_VALUE
-
-# ============ TARGETS (REQUIRED - at least one!) ============
-TARGET_USERS=elonmusk,OpenAI,github
-
-# ============ ACTIONS ============
-AUTO_LIKE=true
-AUTO_RETWEET=true
-AUTO_COMMENT=false  # Recommended: keep disabled
-AUTO_FOLLOW=true
-
-# ============ SAFETY LIMITS ============
+TWITTER_COOKIES=auth_token=xxx; ct0=yyy; kdt=zzz; twid=www
+TARGET_USERS=elonmusk,OpenAI
 MAX_LIKES_PER_RUN=5
-MAX_RETWEETS_PER_RUN=3
-MAX_FOLLOWS_PER_RUN=2
-
-# ============ TIMING ============
-DELAY_MIN=5000   # 5 seconds between actions
-DELAY_MAX=12000  # 12 seconds max
-HEADLESS=false   # See browser for first test
 ```
 
-### Step 4: First Test Run
-
+Run:
 ```bash
 node run.js
 ```
 
-**What happens:**
-1. ✅ Bot reads cookies from `.env`
-2. ✅ Logs into Twitter automatically
-3. ✅ Saves session to `cookies.json`
-4. ✅ Starts liking/retweeting/following based on targets
-5. ✅ Shows progress in terminal
+#### **Option B: Multi-Account (Recommended)**
 
-**If successful**, you'll see:
-```
-🔐 Successfully logged in with cookies
-✅ Cookies saved to cookies.json
-🎯 Starting automation...
-❤️  Liked tweet from @elonmusk
-🔄 Retweeted post from @OpenAI
-```
+For managing multiple accounts:
 
-### Step 5: Enable Background Mode
-
-After successful test, edit `.env`:
-```env
-HEADLESS=true  # Run in background without browser window
-```
-
-Now run again:
 ```bash
-node run.js
+# Copy example config
+cp accounts.json.example accounts.json
+
+# Edit with your accounts
+nano accounts.json
 ```
 
-Bot runs silently in background! 🎉
+Fill in:
+```json
+[
+  {
+    "name": "Account 1",
+    "enabled": true,
+    "cookies": "auth_token=xxx1; ct0=yyy1; kdt=zzz1; twid=www1",
+    "config": {
+      "targetUsers": ["elonmusk", "OpenAI"],
+      "maxLikesPerRun": 5
+    }
+  },
+  {
+    "name": "Account 2",
+    "enabled": true,
+    "cookies": "auth_token=xxx2; ct0=yyy2; kdt=zzz2; twid=www2",
+    "config": {
+      "targetUsers": ["github", "vercel"],
+      "maxLikesPerRun": 7
+    }
+  }
+]
+```
+
+Run:
+```bash
+# Run accounts one by one (recommended)
+node run-multi.js sequential
+
+# Or run all at once (faster but riskier)
+node run-multi.js parallel
+```
 
 ## 📁 Project Structure
 
 ```
 twitter-bot/
 ├── src/
-│   ├── auth.js           # Cookie authentication handler
-│   ├── twitter.js        # Main bot controller
+│   ├── auth.js              # Cookie authentication handler
+│   ├── twitter.js           # Main bot controller
 │   ├── actions/
-│   │   ├── like.js       # Like functionality
-│   │   ├── retweet.js    # Retweet functionality
-│   │   ├── comment.js    # Comment functionality
-│   │   └── follow.js     # Follow functionality
-│   └── scheduler.js      # Cron scheduling
+│   │   ├── like.js          # Like functionality
+│   │   ├── retweet.js       # Retweet functionality
+│   │   ├── comment.js       # Comment functionality
+│   │   └── follow.js        # Follow functionality
+│   └── scheduler.js         # Cron scheduling
 ├── utils/
-│   ├── logger.js         # Logging system
-│   └── helpers.js        # Helper functions
+│   ├── logger.js            # Logging system
+│   └── helpers.js           # Helper functions
 ├── config/
-│   └── config.js         # Configuration loader
-├── .env                  # YOUR configuration (NEVER commit!)
-├── .env.example          # Example configuration
-├── cookies.json          # Saved session (auto-generated)
-├── package.json          # Dependencies
-├── run.js                # Entry point
-└── README.md             # This file
+│   └── config.js            # Configuration loader
+├── .env                     # Single account config (NOT committed)
+├── .env.example             # Example configuration
+├── accounts.json            # Multi-account config (NOT committed)
+├── accounts.json.example    # Multi-account template
+├── package.json             # Dependencies
+├── run.js                   # Single account mode
+├── run-multi.js             # Multi-account mode
+└── README.md                # This file
 ```
 
 ## ⚙️ Configuration Reference
 
-### Required Settings
+### Single Account (`.env`)
 
 ```env
-# MUST HAVE: Cookies from your browser
+# Authentication
 USE_COOKIES=true
 TWITTER_COOKIES=auth_token=xxx; ct0=yyy; kdt=zzz; twid=www
 
-# MUST HAVE: At least one target
-TARGET_USERS=elonmusk,OpenAI
-# OR
-TARGET_TWEETS=https://x.com/username/status/1234567890
-```
+# Actions
+AUTO_LIKE=true
+AUTO_RETWEET=true
+AUTO_COMMENT=false
+AUTO_FOLLOW=true
 
-### Bot Actions
+# Targets (at least one required!)
+TARGET_USERS=elonmusk,OpenAI,github
+TARGET_TWEETS=
 
-Enable/disable specific actions:
-
-```env
-AUTO_LIKE=true       # Like tweets
-AUTO_RETWEET=true    # Retweet posts
-AUTO_COMMENT=false   # Comment on tweets (RISKY - not recommended)
-AUTO_FOLLOW=true     # Follow users
-```
-
-### Targeting Options
-
-**Option 1: Target Users (Recommended)**
-```env
-TARGET_USERS=elonmusk,OpenAI,github,vercel
-```
-Bot will interact with recent tweets from these accounts.
-
-**Option 2: Target Specific Tweets**
-```env
-TARGET_TWEETS=https://x.com/user/status/123,https://x.com/user/status/456
-```
-Bot will only interact with these specific tweets.
-
-**Option 3: Both**
-```env
-TARGET_TWEETS=https://x.com/user/status/123
-TARGET_USERS=OpenAI,github
-```
-Bot will do both!
-
-### Safety Limits
-
-**For NEW accounts (< 1 month old):**
-```env
-MAX_LIKES_PER_RUN=3
-MAX_RETWEETS_PER_RUN=2
+# Limits (adjust based on account age)
+MAX_LIKES_PER_RUN=5
+MAX_RETWEETS_PER_RUN=3
 MAX_COMMENTS_PER_RUN=0
-MAX_FOLLOWS_PER_RUN=1
-DELAY_MIN=7000    # 7 seconds
-DELAY_MAX=15000   # 15 seconds
-```
-**Run:** Once per day maximum
+MAX_FOLLOWS_PER_RUN=2
 
-**For ESTABLISHED accounts (3+ months old):**
-```env
-MAX_LIKES_PER_RUN=10
-MAX_RETWEETS_PER_RUN=7
-MAX_COMMENTS_PER_RUN=3
-MAX_FOLLOWS_PER_RUN=3
-DELAY_MIN=3000    # 3 seconds
-DELAY_MAX=8000    # 8 seconds
-```
-**Run:** 2-3 times per day
-
-### Comments Configuration
-
-If `AUTO_COMMENT=true`, bot randomly selects from these:
-
-```env
-# MINIMUM 10 comments recommended!
-COMMENTS=Great post!,Thanks for sharing!,Very informative!,Love this!,Awesome content!,Well said!,Interesting perspective!,This is helpful!,Nice work!,Appreciate this!
+# Behavior
+DELAY_MIN=5000
+DELAY_MAX=12000
+HEADLESS=true
 ```
 
-**Tips:**
-- ✅ Use 10+ varied comments (harder to detect)
-- ✅ Match your normal style
-- ❌ Avoid generic words like "nice", "cool"
-- ⚠️ Comments are RISKY - recommend keeping `AUTO_COMMENT=false`
+### Multi-Account (`accounts.json`)
 
-### Scheduling
-
-Run bot automatically:
-
-```env
-ENABLE_SCHEDULER=true
-SCHEDULE_CRON=0 */6 * * *  # Every 6 hours
+```json
+[
+  {
+    "name": "Account Name",
+    "enabled": true,
+    "cookies": "auth_token=xxx; ct0=yyy; kdt=zzz; twid=www",
+    "config": {
+      "autoLike": true,
+      "autoRetweet": true,
+      "autoComment": false,
+      "autoFollow": true,
+      "targetUsers": ["elonmusk", "OpenAI"],
+      "targetTweets": [],
+      "maxLikesPerRun": 5,
+      "maxRetweetsPerRun": 3,
+      "maxCommentsPerRun": 0,
+      "maxFollowsPerRun": 2,
+      "delayMin": 5000,
+      "delayMax": 12000,
+      "headless": true
+    }
+  }
+]
 ```
 
-**Cron Examples:**
-- `0 */6 * * *` - Every 6 hours
-- `0 9,15,21 * * *` - At 9am, 3pm, 9pm
-- `0 14 * * *` - Every day at 2pm
-- `0 10 * * 1-5` - Weekdays at 10am
+**To add more accounts:** Copy the block above, change cookies and config, paste in the array!
 
-Then run:
+## 🎯 Usage Examples
+
+### Example 1: Single Account Testing
+
 ```bash
+# Edit .env with your account
+nano .env
+
+# Run
 node run.js
-# Bot stays running and executes on schedule
+```
+
+### Example 2: Multiple Accounts Sequential
+
+```bash
+# Edit accounts.json
+nano accounts.json
+
+# Run one by one (safer)
+node run-multi.js sequential
+```
+
+Output:
+```
+🤖 Starting: Account 1
+✅ Logged in successfully!
+❤️  Starting likes...
+  ✓ Liked tweet 1
+  ✓ Liked tweet 2
+✅ Account 1 completed! (5 actions)
+
+⏳ Waiting 30s before next account...
+
+🤖 Starting: Account 2
+...
+```
+
+### Example 3: Multiple Accounts Parallel
+
+```bash
+# Run all accounts at once (faster) # Semua sekaligus
+node run-multi.js parallel
+```
+
+### Example 4: Custom Config File
+
+```bash
+# Use different config file  # Satu per satu
+node run-multi.js sequential --file my-accounts.json
+```
+
+### Example 5: Disable Specific Account
+
+In `accounts.json`:
+```json
+{
+  "name": "Account 2",
+  "enabled": false,  // ← Set to false to skip
+  "cookies": "...",
+  "config": { ... }
+}
 ```
 
 ## 🛡️ Safety & Best Practices
@@ -294,241 +321,196 @@ node run.js
 Twitter actively detects and bans bot accounts. Follow these rules:
 
 **1. Start Slow**
-- New account? Use conservative limits (3/2/0/1)
+- New accounts: Max 5 actions per run
 - Wait 24-48 hours between first runs
-- Don't run bot on brand new accounts (wait 1 week)
+- Don't run bot on brand new accounts
 
 **2. Use Realistic Delays**
 - Minimum 5 seconds between actions
-- Add randomness (use DELAY_MIN/MAX range)
-- Humans don't like/follow every 2 seconds!
+- Add randomness (DELAY_MIN/MAX)
+- Humans don't like every 2 seconds!
 
-**3. Don't Overdo It**
-- Daily limits: New accounts 10-15 actions, old accounts 50-100
-- Don't run 24/7
-- Take breaks (weekends without bot)
+**3. Conservative Limits**
 
-**4. Avoid Suspicious Patterns**
-- Don't like everything from one user
-- Don't follow 100 people in a row
-- Mix actions (like, then retweet, then follow)
+| Account Age | Likes/day | Retweets/day | Follows/day | Runs/day |
+|-------------|-----------|--------------|-------------|----------|
+| **New** (< 1 month) | 5-10 | 3-5 | 2-5 | 1 |
+| **Medium** (1-6 months) | 20-30 | 10-15 | 10-15 | 2 |
+| **Old** (> 6 months) | 50-70 | 30-40 | 20-30 | 3-4 |
 
-**5. Monitor Your Account**
+**4. Multi-Account Strategy**
+- Wait 30+ seconds between accounts
+- Use sequential mode (safer than parallel)
+- Different targets per account
+- Stagger run times
+
+**5. Monitor & Respond**
 - Check for "suspicious activity" emails
-- If you see warnings, STOP bot immediately
-- If locked, wait 48-72 hours before resuming
+- If locked, STOP immediately
+- Wait 48-72 hours before resuming
+- Reduce limits by 50%
 
 ### 🚨 If Account Gets Locked
 
-**Immediate Actions:**
-1. ✅ Unlock via email verification
+1. ✅ Unlock via email/phone verification
 2. ⏸️ STOP bot for 2-3 days minimum
-3. 🧑 Do manual activity (scroll, like, read tweets)
-4. 📉 When resuming, cut limits in HALF
-5. 🔍 Monitor closely for 1 week
+3. 🧑 Do manual activity (scroll, read, like)
+4. 📉 Cut limits in HALF when resuming
+5. 🔍 Monitor for 1 week
 
-**Prevention:**
-- Use conservative limits
-- Don't rush
-- Quality over quantity
-- Patience = account survival
+## 🔧 Advanced Features
 
-### 📊 Recommended Daily Limits
+### Sequential vs Parallel Modes
 
-| Account Age | Likes | Retweets | Follows | Comments | Runs/Day |
-|-------------|-------|----------|---------|----------|----------|
-| **New** (< 1 month) | 5-10 | 3-5 | 2-5 | 0-2 | 1 |
-| **Medium** (1-6 months) | 20-30 | 10-15 | 10-15 | 3-5 | 2 |
-| **Old** (> 6 months) | 50-70 | 30-40 | 20-30 | 10-15 | 3 |
+**Sequential Mode (Recommended):**
+- ✅ Runs accounts one by one
+- ✅ Safer (less suspicious)
+- ✅ 30s wait between accounts
+- ⏱️ Slower but reliable
+
+```bash
+node run-multi.js sequential
+```
+
+**Parallel Mode:**
+- ⚡ Runs all accounts simultaneously
+- ⚠️ More suspicious to Twitter
+- ⚡ Faster execution
+- ⚠️ Higher risk
+
+```bash
+node run-multi.js parallel
+```
+
+### Per-Account Configuration
+
+Each account in `accounts.json` can have different:
+- Targets (different users/tweets)
+- Action limits (some accounts more active)
+- Delays (vary behavior patterns)
+- Enabled actions (one only likes, another retweets)
+
+Example:
+```json
+[
+  {
+    "name": "Conservative Account",
+    "config": {
+      "targetUsers": ["elonmusk"],
+      "maxLikesPerRun": 3,
+      "delayMin": 7000,
+      "delayMax": 15000
+    }
+  },
+  {
+    "name": "Active Account",
+    "config": {
+      "targetUsers": ["github", "vercel", "nodejs"],
+      "maxLikesPerRun": 10,
+      "delayMin": 3000,
+      "delayMax": 8000
+    }
+  }
+]
+```
+
+### Execution Summary
+
+After running multi-account mode, you'll get a summary:
+
+```
+📊 EXECUTION SUMMARY
+============================================================
+Account 1: ✅ SUCCESS (8 actions)
+Account 2: ✅ SUCCESS (12 actions)
+Account 3: ❌ FAILED
+  └─ Error: Cookie authentication failed
+
+Total: 2/3 succeeded
+============================================================
+```
 
 ## 🐛 Troubleshooting
 
-### Login Fails
+### Multi-Account: "Cannot find accounts.json"
 
-**Error:** `Cookie authentication failed`
+```bash
+# Create from template
+cp accounts.json.example accounts.json
+nano accounts.json
+```
+
+### Multi-Account: All Accounts Failing
+
+**Check:**
+1. Cookies format (no spaces!)
+2. All 4 cookies present (auth_token, ct0, kdt, twid)
+3. Accounts are `"enabled": true`
+4. Cookies not expired (get fresh ones)
+
+### One Account Works, Others Fail
+
+- Get fresh cookies for failing accounts
+- Check if those accounts are locked
+- Verify cookie format is identical
+
+### "Login verification failed"
 
 **Solutions:**
-1. ✅ Get FRESH cookies (logout/login to Twitter first)
-2. ✅ Check format (no spaces, 4 values separated by semicolons)
-3. ✅ Make sure you copied ALL 4 cookie values
-4. ✅ Try from incognito/private window
+1. Get fresh cookies (logout → login → copy cookies)
+2. Wait 5 minutes, try again
+3. Check Twitter account directly (may be locked)
+4. Set `"headless": false` to see what's happening
 
-**Still failing?**
+## 📚 Command Reference
+
+### Single Account
+
 ```bash
-# Run with visible browser to see what's happening
-# Edit .env:
-HEADLESS=false
-# Then run
+# Run single account
+node run.js
+
+# With visible browser (debugging)
+# Edit .env: HEADLESS=false
 node run.js
 ```
 
-### No Targets Error
+### Multi-Account
 
-**Error:** `At least one target must be provided`
-
-**Solution:**
-```env
-# Your .env has:
-TARGET_TWEETS=
-TARGET_USERS=
-
-# Fix: Add at least ONE target
-TARGET_USERS=elonmusk,OpenAI
-```
-
-### Import Path Errors
-
-**Error:** `Cannot find module '../config/config.js'`
-
-**Solution:** Check `src/actions/*.js` files:
-```javascript
-// Should be:
-import { config } from '../../config/config.js';
-// NOT:
-import { config } from '../config/config.js';
-```
-
-### Cookies Expire
-
-Cookies last 1-3 months. When they expire:
-
-**Symptoms:**
-- Bot can't login
-- "Authentication failed" error
-
-**Fix:**
-1. Get new cookies from browser (same process as setup)
-2. Update `.env` with new values
-3. Delete old `cookies.json`
-4. Run bot again
-
-### Account Locked (Challenge Page)
-
-**What happened:**
-Twitter detected unusual activity and locked account.
-
-**Fix:**
-1. Open browser manually → Login → Complete verification
-2. **IMPORTANT:** Stop bot for 2-3 days
-3. When resuming: Lower ALL limits by 50%
-4. Monitor carefully
-
-## 📚 Usage Examples
-
-### Example 1: Safe Daily Engagement
-
-**Goal:** Like & retweet from favorite accounts daily (safe for new account)
-
-```env
-USE_COOKIES=true
-TWITTER_COOKIES=your_cookies_here
-
-AUTO_LIKE=true
-AUTO_RETWEET=true
-AUTO_COMMENT=false
-AUTO_FOLLOW=false
-
-TARGET_USERS=elonmusk,OpenAI
-MAX_LIKES_PER_RUN=5
-MAX_RETWEETS_PER_RUN=3
-
-DELAY_MIN=7000
-DELAY_MAX=15000
-HEADLESS=true
-```
-
-Run once daily:
 ```bash
-node run.js
+# Run all enabled accounts (one by one)
+node run-multi.js sequential
+
+# Run all enabled accounts (simultaneously)
+node run-multi.js parallel
+
+# Use custom config file
+node run-multi.js sequential --file work-accounts.json
+node run-multi.js parallel --file personal-accounts.json
 ```
 
-### Example 2: Growth Strategy
+### Adding New Account
 
-**Goal:** Grow following by engaging with tech community
+1. Edit `accounts.json`
+2. Copy an existing account block
+3. Change `name`, `cookies`, and `config`
+4. Set `"enabled": true`
+5. Save and run
 
-```env
-USE_COOKIES=true
-TWITTER_COOKIES=your_cookies_here
-
-AUTO_LIKE=true
-AUTO_RETWEET=true
-AUTO_FOLLOW=true
-
-TARGET_USERS=github,vercel,nodejs,reactjs,tailwindcss
-MAX_LIKES_PER_RUN=10
-MAX_RETWEETS_PER_RUN=5
-MAX_FOLLOWS_PER_RUN=3
-
-DELAY_MIN=5000
-DELAY_MAX=12000
-```
-
-Run 2-3 times per day.
-
-### Example 3: Automated Scheduled Run
-
-**Goal:** Bot runs automatically 3x daily
-
-```env
-USE_COOKIES=true
-TWITTER_COOKIES=your_cookies_here
-
-AUTO_LIKE=true
-AUTO_RETWEET=true
-AUTO_FOLLOW=true
-
-TARGET_USERS=your,favorite,accounts
-MAX_LIKES_PER_RUN=7
-MAX_RETWEETS_PER_RUN=4
-MAX_FOLLOWS_PER_RUN=2
-
-ENABLE_SCHEDULER=true
-SCHEDULE_CRON=0 9,15,21 * * *  # 9am, 3pm, 9pm
-
-HEADLESS=true
-```
-
-Start scheduler:
-```bash
-node run.js
-# Bot keeps running and executes at scheduled times
-```
-
-## 🔧 Advanced Tips
-
-### Rotate Cookies for Multiple Accounts
-
-Create separate `.env` files:
-```bash
-.env.account1
-.env.account2
-```
-
-Run with specific config:
-```bash
-node run.js --env .env.account1
-```
-
-### Use Proxy for Privacy
-
-```env
-USE_PROXY=true
-PROXY_URL=http://username:password@proxy.com:8080
-```
-
-**Recommended:** Residential proxies (not datacenter)
-
-### Enable Debug Logging
-
-```env
-LOG_LEVEL=debug
-LOG_TO_FILE=true
-LOG_FILE_PATH=./logs/bot.log
-```
-
-Check logs:
-```bash
-cat logs/bot.log
+Example:
+```json
+[
+  // Existing accounts...
+  {
+    "name": "New Account 4",
+    "enabled": true,
+    "cookies": "auth_token=NEW; ct0=NEW; kdt=NEW; twid=NEW",
+    "config": {
+      "targetUsers": ["reactjs", "tailwindcss"],
+      "maxLikesPerRun": 5
+    }
+  }
+]
 ```
 
 ## 🤝 Contributing
@@ -551,7 +533,7 @@ MIT License - see [LICENSE](LICENSE) file
 
 - Use at your own risk
 - Author not responsible for account bans
-- Twitter may update policies/detection anytime
+- Twitter may update policies anytime
 - Excessive automation = permanent ban
 - Always follow Twitter Terms of Service
 
@@ -565,18 +547,20 @@ MIT License - see [LICENSE](LICENSE) file
 - **Issues:** [GitHub Issues](https://github.com/xeonthol/twitter-bot/issues)
 - **Questions:** [Discussions](https://github.com/xeonthol/twitter-bot/discussions)
 
-## 📈 Roadmap
+## 🗺️ Roadmap
 
-- [ ] Anti-detection improvements
-- [ ] Proxy rotation support
+- [x] Cookie-based authentication
+- [x] Multi-account support
+- [x] Sequential & parallel modes
+- [x] Per-account configuration
 - [ ] Web dashboard/GUI
-- [ ] Twitter Lists support
+- [ ] Proxy rotation
 - [ ] Analytics & reporting
-- [ ] Docker containerization
-- [ ] Multi-account manager
+- [ ] Docker support
+- [ ] Twitter Lists support
 
 ---
 
 **⭐ Star this repo if helpful!**
 
-Made with ❤️ by [xeonthol](https://github.com/xeonthol)
+Made with ❤️ by [xeonthol](https://github.com/xeonthol) (https://x.com/xeonthol)
