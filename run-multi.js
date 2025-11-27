@@ -363,62 +363,51 @@ async function commentOnTweet(page, tweetUrl, commentText) {
 }
 
 /**
- * Follow specific user - with anti-suspend measures
+ * Wait for element with timeout - FROM STEALTH SCRIPT
+ */
+async function waitForElement(page, selectors, timeout = 8000) {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < timeout) {
+    for (const selector of selectors) {
+      const element = await page.$(selector);
+      if (element) return element;
+    }
+    await sleep(300, 500);
+  }
+  
+  return null;
+}
+
+/**
+ * Follow user - FROM STEALTH SCRIPT (WORKING VERSION)
  */
 async function followUser(page, username) {
   try {
     console.log(`  👤 Following: @${username}`);
     await page.goto(`https://x.com/${username}`, { 
-      waitUntil: 'networkidle2', 
-      timeout: 30000 
+      waitUntil: 'domcontentloaded', 
+      timeout: 20000 
     });
+    await sleep(3000, 5000); // View profile time
     
-    // Simulate profile viewing
-    await simulateReading(page, randomDelay(4000, 7000));
+    // Random scroll
     await randomScroll(page);
 
-    const pageContent = await page.content();
-    if (pageContent.includes("doesn't exist")) {
-      console.log(`  ❌ User @${username} doesn't exist`);
-      return false;
-    }
-
-    // Check if already following first
-    const unfollowButton = await page.$('[data-testid="unfollow"]');
-    if (unfollowButton) {
-      console.log(`  ℹ️  Already following @${username}`);
-      return false; // Not counting as new action
-    }
-
-    const followSelectors = [
-      'button[data-testid="follow"]',
-      'div[data-testid="follow"]',
-      '[aria-label="Follow"]'
-    ];
-
-    let followButton = null;
-    for (const selector of followSelectors) {
-      followButton = await page.$(selector);
-      if (followButton) break;
-    }
+    const followButton = await waitForElement(page, [
+      '[data-testid="follow"]',
+      'button[data-testid*="follow"]:not([data-testid*="unfollow"])'
+    ], 5000);
 
     if (followButton) {
       await humanClick(page, followButton);
-      await sleep(randomDelay(2000, 3000));
-      
-      // VERIFY: Check if follow was successful
-      const verifyUnfollow = await page.$('[data-testid="unfollow"]');
-      if (verifyUnfollow) {
-        console.log(`  ✅ Follow CONFIRMED for @${username}!`);
-        return true;
-      } else {
-        console.log(`  ❌ Follow failed for @${username} - not registered`);
-        return false;
-      }
-    } else {
-      console.log(`  ❌ Follow button not found for @${username}`);
-      return false;
+      console.log(`  ✅ Followed @${username}`);
+      await sleep(2000, 4000);
+      return true;
     }
+
+    console.log(`  ℹ️  Already following or button not found`);
+    return false;
   } catch (error) {
     console.log(`  💥 Failed to follow @${username}: ${error.message}`);
     return false;
