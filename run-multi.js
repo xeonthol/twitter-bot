@@ -429,7 +429,7 @@ async function runAccount(account, index) {
   try {
     // Launch browser with stealth settings
     browser = await puppeteer.launch({
-      headless: false, // Visible browser for more human-like behavior
+      headless: true, // Visible browser for more human-like behavior
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
