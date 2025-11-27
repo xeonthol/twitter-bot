@@ -4,7 +4,7 @@
 !.env.example
 cookies.json
 accounts.json
-
+accounts.js
 # Dependencies
 node_modules/
 package-lock.json
@@ -33,4 +33,4 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
-*~
+*~accounts.js
